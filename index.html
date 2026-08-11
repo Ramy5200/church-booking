@@ -3,328 +3,245 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الحجز الذكي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام الحجز الذكي - للموبايل</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #5b5fc7;
-            /* Purple/Blue from image */
             --primary-hover: #4a4eb0;
             --secondary-color: #e74c3c;
             --success-color: #2ecc71;
             --warning-color: #f1c40f;
-            --bg-color: #f8f9fa;
+            --bg-color: #f0f2f5;
             --surface-color: #ffffff;
             --text-color: #333333;
             --text-muted: #777777;
-            --border-color: #eaedf1;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --radius: 8px;
-            --transition: all 0.2s ease;
+            --border-color: #e1e4e8;
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Cairo', sans-serif;
             margin: 0;
-            background-color: var(--surface-color);
+            background-color: var(--bg-color);
             color: var(--text-color);
-            height: 100vh;
             display: flex;
             flex-direction: column;
+            height: 100vh;
             overflow: hidden;
         }
 
         /* Login Screen */
         #loginScreen {
-            max-width: 360px;
-            margin: 15vh auto;
-            padding: 40px 30px;
+            padding: 30px;
             background: var(--surface-color);
             border-radius: var(--radius);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow);
+            margin: auto;
+            width: 90%;
+            max-width: 400px;
             text-align: center;
-            border: 1px solid var(--border-color);
         }
 
-        #loginScreen h2 {
-            color: var(--primary-color);
-            margin-top: 0;
-            margin-bottom: 30px;
+        #loginScreen input,
+        #loginScreen button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 16px;
         }
 
         #loginScreen input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
             border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            box-sizing: border-box;
-            font-family: inherit;
         }
 
         #loginScreen button {
-            width: 100%;
-            padding: 12px;
             background: var(--primary-color);
             color: white;
             border: none;
-            cursor: pointer;
-            border-radius: var(--radius);
-            font-family: inherit;
-            font-weight: 700;
-            font-size: 16px;
-            margin-top: 15px;
+            font-weight: bold;
         }
 
-        /* Layout */
+        /* App Screen */
         #appScreen {
             display: none;
+            flex-direction: column;
             height: 100%;
-            flex-direction: row;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background: var(--surface-color);
-            border-left: 1px solid var(--border-color);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
-
-        .sidebar-section h4 {
-            margin: 0 0 15px 0;
-            color: var(--text-color);
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .date-picker-container input[type="date"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            font-family: inherit;
-            font-weight: 600;
-            color: var(--text-color);
-            box-sizing: border-box;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .filter-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .filter-label input[type="checkbox"],
-        .filter-label input[type="radio"] {
-            accent-color: var(--primary-color);
-            width: 16px;
-            height: 16px;
-        }
-
-        .user-info {
-            margin-top: auto;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .user-info button {
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            padding: 8px;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .user-info button:hover {
-            background: var(--border-color);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-color);
-            overflow: hidden;
-        }
-
-        .top-header {
+        /* Header */
+        .header {
             background: var(--surface-color);
             padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            z-index: 10;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .top-header h2 {
+        .header h2 {
             margin: 0;
             font-size: 18px;
-            color: var(--text-color);
-        }
-
-        /* Matrix Table */
-        .matrix-container {
-            flex: 1;
-            overflow: auto;
-            background: var(--surface-color);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-        }
-
-        th,
-        td {
-            border: 1px solid var(--border-color);
-            padding: 0;
-            min-width: 80px;
-            height: 50px;
-            position: relative;
-        }
-
-        /* Sticky Headers & Columns */
-        thead th {
-            position: sticky;
-            top: 0;
-            background: var(--surface-color);
-            z-index: 10;
-            padding: 15px 5px;
-            font-weight: 400;
-            color: var(--text-muted);
-            font-size: 13px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .room-col {
-            position: sticky;
-            right: 0;
-            background: var(--surface-color);
-            z-index: 9;
-            text-align: right;
-            padding: 0 15px;
-            font-weight: 600;
-            font-size: 14px;
-            min-width: 200px;
-            max-width: 200px;
-            border-left: 1px solid var(--border-color);
-        }
-
-        thead th.room-col {
-            z-index: 11;
-        }
-
-        /* Current Time Highlight */
-        .current-time-header {
             color: var(--primary-color);
-            font-weight: 700;
         }
 
-        .current-time-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
+        .user-badge {
+            font-size: 12px;
+            background: var(--bg-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        /* Filters (Sticky Top) */
+        .filters {
+            background: var(--surface-color);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-weight: bold;
+        }
+
+        /* Horizontal Scrollable Building Chips */
+        .building-chips {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .building-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            padding: 8px 16px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .chip.active {
             background: var(--primary-color);
             color: white;
-            border-radius: 50%;
-            margin-top: 5px;
+            border-color: var(--primary-color);
+        }
+
+        /* Main Content (Scrollable) */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+
+        /* Room Card */
+        .room-card {
+            background: var(--surface-color);
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .room-header {
             font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--bg-color);
+            padding-bottom: 10px;
         }
 
-        /* Time Slots */
-        .time-slot {
+        /* Time Slots Grid */
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .slot {
+            padding: 10px 5px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: var(--surface-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
             cursor: pointer;
-            transition: var(--transition);
         }
 
-        .time-slot:hover {
-            background-color: rgba(91, 95, 199, 0.05);
+        .slot.available {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background: rgba(91, 95, 199, 0.05);
         }
 
-        .time-slot.past-time {
-            background: repeating-linear-gradient(45deg,
-                    #f9f9f9,
-                    #f9f9f9 10px,
-                    #f0f0f0 10px,
-                    #f0f0f0 20px);
+        .slot.past {
+            background: var(--bg-color);
+            color: var(--text-muted);
+            opacity: 0.6;
             cursor: not-allowed;
         }
 
-        .time-slot.past-time:hover {
-            background: repeating-linear-gradient(45deg,
-                    #f9f9f9,
-                    #f9f9f9 10px,
-                    #f0f0f0 10px,
-                    #f0f0f0 20px);
+        .slot.locked {
+            background: var(--bg-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
         }
 
-        /* Hover Plus Icon */
-        .hover-plus {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--primary-color);
-            font-size: 20px;
-            font-weight: bold;
-            pointer-events: none;
+        .slot.approved {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
         }
 
-        .time-slot:not(.past-time):not(.has-booking):hover .hover-plus {
-            display: block;
+        .slot.pending {
+            background: var(--warning-color);
+            color: #000;
+            border-color: var(--warning-color);
         }
 
-        /* Booking States */
-        .booking-event {
-            margin: 4px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-align: right;
+        .slot-name {
+            font-size: 10px;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
-            color: white;
+            max-width: 100%;
         }
 
-        .state-pending {
-            background-color: var(--warning-color);
-            color: #000;
-        }
-
-        .state-approved {
-            background-color: var(--primary-color);
-        }
-
-        /* Modals */
+        /* Bottom Sheet Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -332,60 +249,68 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            align-items: flex-end;
         }
 
-        .modal-box {
+        .bottom-sheet {
             background: var(--surface-color);
-            padding: 30px;
-            border-radius: var(--radius);
-            width: 400px;
-            max-width: 90%;
-            box-shadow: var(--shadow-lg);
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: 25px 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
         }
 
-        .modal-box h3 {
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .bottom-sheet h3 {
             margin-top: 0;
             color: var(--primary-color);
-            margin-bottom: 20px;
         }
 
-        .modal-box label {
-            display: block;
-            margin-top: 15px;
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .modal-box input,
-        .modal-box select {
+        .bottom-sheet input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-top: 5px;
+            margin-bottom: 15px;
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
-            box-sizing: border-box;
             font-family: inherit;
+            font-size: 15px;
         }
 
-        .modal-actions {
-            margin-top: 25px;
+        .bottom-sheet label {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .btn-group {
             display: flex;
             gap: 10px;
+            margin-top: 10px;
         }
 
-        .modal-actions button {
+        .btn {
             flex: 1;
-            padding: 10px;
+            padding: 15px;
             border: none;
             border-radius: var(--radius);
-            font-weight: 600;
-            cursor: pointer;
+            font-weight: bold;
             font-family: inherit;
+            font-size: 15px;
+            cursor: pointer;
         }
 
         .btn-primary {
@@ -396,7 +321,6 @@
         .btn-secondary {
             background: var(--bg-color);
             color: var(--text-color);
-            border: 1px solid var(--border-color) !important;
         }
 
         .btn-danger {
@@ -409,28 +333,30 @@
             color: white;
         }
 
-        /* Toasts */
+        /* Toast */
         #toast-container {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 9999;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            width: 90%;
         }
 
         .toast {
             background: var(--surface-color);
-            padding: 15px 20px;
+            padding: 15px;
             border-radius: var(--radius);
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             gap: 10px;
-            border-right: 4px solid var(--primary-color);
-            font-weight: 600;
+            font-weight: bold;
             font-size: 14px;
+            border-right: 4px solid var(--primary-color);
         }
 
         .toast.success {
@@ -445,213 +371,118 @@
             border-right-color: var(--warning-color);
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 900px) {
-            #appScreen {
-                flex-direction: column !important;
-            }
-
-            .sidebar {
-                width: 100% !important;
-                height: auto !important;
-                max-height: 35vh !important;
-                border-left: none !important;
-                border-bottom: 1px solid var(--border-color) !important;
-                padding: 10px !important;
-                box-sizing: border-box !important;
-                flex-direction: row !important;
-                flex-wrap: wrap !important;
-                gap: 10px !important;
-            }
-
-            .sidebar-section {
-                flex: 1 1 120px;
-                margin-bottom: 0 !important;
-            }
-
-            .user-info {
-                width: 100%;
-                flex-direction: row !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding-top: 10px !important;
-                margin-top: 0 !important;
-            }
-
-            .main-content {
-                height: 65vh !important;
-                flex: none !important;
-            }
-
-            .room-col {
-                min-width: 100px !important;
-                max-width: 100px !important;
-                font-size: 11px !important;
-                padding: 0 5px !important;
-            }
-
-            th,
-            td {
-                min-width: 60px !important;
-                height: 40px !important;
-            }
-
-            .top-header {
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 5px !important;
-                padding: 10px !important;
-            }
-
-            .top-header h2 {
-                font-size: 15px !important;
-            }
-
-            .modal-box {
-                width: 95% !important;
-                padding: 15px !important;
-            }
-
-            .booking-event {
-                font-size: 10px !important;
-                padding: 2px 4px !important;
-            }
-
-            .current-time-badge {
-                width: 24px !important;
-                height: 24px !important;
-                font-size: 12px !important;
-            }
+        /* Floating Action Button for Logout */
+        .fab-logout {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--surface-color);
+            color: var(--secondary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow);
+            z-index: 100;
+            font-size: 20px;
+            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
-
     <div id="toast-container"></div>
 
     <!-- LOGIN SCREEN -->
     <div id="loginScreen">
-        <h2>نظام الحجز الذكي</h2>
+        <h2 style="color: var(--primary-color); margin-bottom: 30px;">نظام الحجز الذكي</h2>
         <input type="text" id="username" placeholder="اسم المستخدم (user / admin)">
         <input type="password" id="password" placeholder="كلمة المرور (1234 / 1004)">
         <button onclick="login()">تسجيل الدخول</button>
     </div>
 
-    <!-- MAIN APP SCREEN -->
+    <!-- APP SCREEN -->
     <div id="appScreen">
+        <div class="header">
+            <h2>جدول الحجوزات</h2>
+            <div id="currentUserDisplay" class="user-badge"></div>
+        </div>
 
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-            <div class="sidebar-section">
-                <h4>تاريخ الحجز</h4>
-                <div class="date-picker-container">
-                    <input type="date" id="bookingDate" onchange="refreshUI()">
-                </div>
+        <div class="filters">
+            <input type="date" id="bookingDate" class="date-input" onchange="refreshUI()">
+            <div class="building-chips" id="buildingChips">
+                <!-- Generated by JS -->
             </div>
-
-            <div class="sidebar-section">
-                <h4>المبنى</h4>
-                <div class="filter-group" id="buildingFilters">
-                    <label class="filter-label"><input type="radio" name="building" value="all" checked
-                            onchange="refreshUI()"> الكل</label>
-                    <label class="filter-label"><input type="radio" name="building" value="الكنيسة"
-                            onchange="refreshUI()"> الكنيسة</label>
-                    <label class="filter-label"><input type="radio" name="building" value="مبنى الخدمات"
-                            onchange="refreshUI()"> مبنى الخدمات</label>
-                    <label class="filter-label"><input type="radio" name="building" value="مبنى الكرمة"
-                            onchange="refreshUI()"> مبنى الكرمة</label>
-                    <label class="filter-label"><input type="radio" name="building" value="النادي"
-                            onchange="refreshUI()"> النادي</label>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
-                <h4>حالة الحجز</h4>
-                <div class="filter-group">
-                    <label class="filter-label"><input type="checkbox" id="filterApproved" checked
-                            onchange="refreshUI()"> موافق عليه</label>
-                    <label class="filter-label"><input type="checkbox" id="filterPending" checked
-                            onchange="refreshUI()"> قيد الانتظار</label>
-                </div>
-            </div>
-
-            <div class="user-info">
-                <div style="font-size: 14px;">مرحباً: <strong id="currentUserDisplay"></strong></div>
-                <button onclick="logout()">تسجيل الخروج</button>
+            <div
+                style="display: flex; gap: 15px; font-size: 13px; font-weight: bold; color: var(--text-muted); margin-top: 5px;">
+                <label><input type="checkbox" id="filterApproved" checked onchange="refreshUI()"> موافق عليه</label>
+                <label><input type="checkbox" id="filterPending" checked onchange="refreshUI()"> قيد الانتظار</label>
             </div>
         </div>
 
-        <!-- MAIN CONTENT -->
-        <div class="main-content">
-            <div class="top-header">
-                <div>
-                    <h2>جدول الحجوزات</h2>
-                    <div style="font-size: 12px; color: var(--secondary-color); margin-top: 5px;">مبنى الكرمة سيفتح في
-                        حاله ان تم حجز مبني الكنيسه</div>
-                </div>
-                <div id="adminBadge"
-                    style="display:none; background: var(--warning-color); padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">
-                    وضع الإدارة</div>
-            </div>
-
-            <div class="matrix-container">
-                <table id="bookingMatrix">
-                    <thead>
-                        <tr id="timeHeaders">
-                            <!-- Generated by JS -->
-                        </tr>
-                    </thead>
-                    <tbody id="matrixBody">
-                        <!-- Generated by JS -->
-                    </tbody>
-                </table>
-            </div>
+        <div class="content" id="mainContent">
+            <!-- Generated by JS -->
         </div>
+
+        <div class="fab-logout" onclick="logout()">🚪</div>
     </div>
 
-    <!-- MODALS -->
-    <div id="bookingModal" class="modal-overlay">
-        <div class="modal-box">
+    <!-- BOOKING MODAL -->
+    <div id="bookingModal" class="modal-overlay" onclick="if(event.target===this) closeModals()">
+        <div class="bottom-sheet">
             <h3 id="modalTitle">طلب حجز جديد</h3>
-            <p style="font-size: 13px; color: var(--text-muted);" id="modalSubtitle"></p>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;" id="modalSubtitle"></p>
 
             <form id="bookingForm" onsubmit="submitBooking(event)">
                 <label>اسم المسؤول عن الحجز</label>
                 <input type="text" id="f_name" required>
                 <label>اسم الخدمة</label>
                 <input type="text" id="f_service" required>
-                <label>رقم الهاتف</label>
-                <input type="tel" id="f_phone" required>
-                <label>عدد الأفراد</label>
-                <input type="number" id="f_count" min="1" required>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="f_phone" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>عدد الأفراد</label>
+                        <input type="number" id="f_count" min="1" required>
+                    </div>
+                </div>
+
                 <label>السبب</label>
                 <input type="text" id="f_reason" required>
 
                 <div id="recurringSection"
-                    style="display:none; margin-top: 15px; padding: 10px; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
-                    <label style="margin-top: 0;"><input type="checkbox" id="f_recurring"
+                    style="display:none; margin-top: 5px; padding: 15px; background: var(--bg-color); border-radius: var(--radius);">
+                    <label style="display: flex; align-items: center; gap: 10px; margin: 0;">
+                        <input type="checkbox" id="f_recurring" style="width: auto; margin: 0;"
                             onchange="document.getElementById('endDateSection').style.display = this.checked ? 'block' : 'none';">
-                        حجز متكرر (أسبوعياً)</label>
-                    <div id="endDateSection" style="display:none;">
+                        حجز متكرر (أسبوعياً)
+                    </label>
+                    <div id="endDateSection" style="display:none; margin-top: 15px;">
                         <label>تاريخ الانتهاء</label>
-                        <input type="date" id="f_end_date">
+                        <input type="date" id="f_end_date" style="margin-bottom: 0;">
                     </div>
                 </div>
 
-                <div class="modal-actions">
-                    <button type="submit" class="btn-primary" id="btnSubmitForm">تأكيد الحجز</button>
-                    <button type="button" class="btn-secondary" onclick="closeModals()">إلغاء</button>
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" id="btnSubmitForm">تأكيد</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="detailsModal" class="modal-overlay">
-        <div class="modal-box">
+    <!-- DETAILS MODAL -->
+    <div id="detailsModal" class="modal-overlay" onclick="if(event.target===this) closeModals()">
+        <div class="bottom-sheet">
             <h3>تفاصيل الحجز</h3>
-            <div id="detailsContent" style="font-size: 14px; line-height: 1.8;"></div>
-            <div class="modal-actions" id="detailsActions"></div>
+            <div id="detailsContent" style="font-size: 15px; line-height: 2; margin-bottom: 20px;"></div>
+            <div class="btn-group" id="detailsActions" style="flex-wrap: wrap;"></div>
         </div>
     </div>
 
@@ -660,6 +491,7 @@
         let selectedRoom = "";
         let selectedTime = "";
         let selectedBookingId = null;
+        let selectedBuilding = "الكنيسة"; // Default
 
         if (!localStorage.getItem('bookingsDB')) { localStorage.setItem('bookingsDB', JSON.stringify([])); }
 
@@ -685,7 +517,7 @@
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
 
-            if (user === 'user' && pass === '1234') { currentUser = 'user'; loadApp(); showToast('تم تسجيل الدخول بنجاح', 'success'); }
+            if (user === 'user' && pass === '1234') { currentUser = 'user'; loadApp(); showToast('تم تسجيل الدخول', 'success'); }
             else if (user === 'admin' && pass === '1004') { currentUser = 'admin'; loadApp(); showToast('مرحباً بك في لوحة الإدارة', 'success'); }
             else { showToast('بيانات الدخول خاطئة!', 'error'); }
         }
@@ -706,30 +538,47 @@
         function loadApp() {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'flex';
-            document.getElementById('currentUserDisplay').innerText = currentUser === 'admin' ? 'المدير' : 'مستخدم';
-            document.getElementById('adminBadge').style.display = currentUser === 'admin' ? 'block' : 'none';
+            document.getElementById('currentUserDisplay').innerText = currentUser === 'admin' ? 'المدير 👑' : 'مستخدم 👤';
 
             if (!document.getElementById('bookingDate').value) {
                 document.getElementById('bookingDate').value = getLocalDateStr();
             }
+
+            renderBuildingChips();
             refreshUI();
+        }
+
+        function renderBuildingChips() {
+            const container = document.getElementById('buildingChips');
+            container.innerHTML = '';
+
+            // Add "All" option
+            let allChip = document.createElement('div');
+            allChip.className = 'chip' + (selectedBuilding === 'all' ? ' active' : '');
+            allChip.innerText = 'الكل';
+            allChip.onclick = () => { selectedBuilding = 'all'; renderBuildingChips(); refreshUI(); };
+            container.appendChild(allChip);
+
+            scheduleData.forEach(bldg => {
+                let chip = document.createElement('div');
+                chip.className = 'chip' + (selectedBuilding === bldg.building ? ' active' : '');
+                chip.innerText = bldg.building;
+                chip.onclick = () => { selectedBuilding = bldg.building; renderBuildingChips(); refreshUI(); };
+                container.appendChild(chip);
+            });
         }
 
         function getBookings() { return JSON.parse(localStorage.getItem('bookingsDB')); }
         function saveBookings(data) { localStorage.setItem('bookingsDB', JSON.stringify(data)); }
 
-        function showToast(message, type) {
-            if (!type) type = 'info';
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast ' + type;
-            let icon = 'ℹ️';
-            if (type === 'success') icon = '✅';
-            if (type === 'error') icon = '❌';
-            if (type === 'warning') icon = '⚠️';
-            toast.innerHTML = '<span>' + icon + '</span> <span>' + message + '</span>';
+            let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
             container.appendChild(toast);
-            setTimeout(function () { toast.remove(); }, 3000);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         function openBookingForm(room, time) {
@@ -737,8 +586,9 @@
             selectedTime = time;
             const date = document.getElementById('bookingDate').value;
             if (!date) { showToast("برجاء اختيار التاريخ أولاً", "warning"); return; }
+
             document.getElementById('bookingForm').reset();
-            document.getElementById('modalSubtitle').innerText = "المكان: " + room + " | الوقت: " + time + " | التاريخ: " + date;
+            document.getElementById('modalSubtitle').innerText = `${room} • ${time} • ${date}`;
             document.getElementById('btnSubmitForm').innerText = currentUser === 'admin' ? "تأكيد وإضافة مباشر" : "إرسال طلب الحجز";
 
             document.getElementById('recurringSection').style.display = currentUser === 'admin' ? 'block' : 'none';
@@ -774,8 +624,8 @@
                 }
             }
 
-            datesToBook.forEach(function (d) {
-                let newBooking = {
+            datesToBook.forEach(d => {
+                bookings.push({
                     id: Date.now() + Math.floor(Math.random() * 1000),
                     date: d,
                     room: selectedRoom,
@@ -788,23 +638,18 @@
                         count: document.getElementById('f_count').value,
                         reason: document.getElementById('f_reason').value
                     }
-                };
-                bookings.push(newBooking);
+                });
             });
 
             saveBookings(bookings);
             closeModals();
             refreshUI();
 
-            if (currentUser !== 'admin') {
-                showToast("تم ارسال طلبك بنجاح. في انتظار موافقة الإدارة.", "success");
-            } else {
-                showToast("تم إضافة الحجز بنجاح.", "success");
-            }
+            showToast(currentUser === 'admin' ? "تم إضافة الحجز بنجاح." : "تم ارسال طلبك بنجاح. في انتظار موافقة الإدارة.", "success");
         }
 
         function openAdminDetails(bookingId) {
-            const booking = getBookings().find(function (b) { return b.id === bookingId; });
+            const booking = getBookings().find(b => b.id === bookingId);
             if (!booking) return;
 
             if (currentUser !== 'admin' && booking.status === 'Approved') {
@@ -814,32 +659,35 @@
 
             selectedBookingId = bookingId;
             const content = document.getElementById('detailsContent');
-            let statusHtml = booking.status === 'Pending' ? '<span style="color:var(--warning-color);font-weight:bold;">قيد الانتظار</span>' : '<span style="color:var(--success-color);font-weight:bold;">موافق عليه</span>';
+            let statusHtml = booking.status === 'Pending' ? '<span style="color:var(--warning-color);font-weight:bold;">قيد الانتظار ⏳</span>' : '<span style="color:var(--success-color);font-weight:bold;">موافق عليه ✅</span>';
 
-            content.innerHTML =
-                '<p><strong>التاريخ:</strong> ' + booking.date + '</p>' +
-                '<p><strong>المكان:</strong> ' + booking.room + ' (' + booking.time + ')</p>' +
-                '<p><strong>المسؤول:</strong> ' + booking.details.name + '</p>' +
-                '<p><strong>الخدمة:</strong> ' + booking.details.service + '</p>' +
-                '<p><strong>الهاتف:</strong> ' + booking.details.phone + '</p>' +
-                '<p><strong>العدد:</strong> ' + booking.details.count + ' أفراد</p>' +
-                '<p><strong>السبب:</strong> ' + booking.details.reason + '</p>' +
-                '<p><strong>الحالة:</strong> ' + statusHtml + '</p>';
+            content.innerHTML = `
+                <div><strong>التاريخ:</strong> ${booking.date}</div>
+                <div><strong>المكان:</strong> ${booking.room} (${booking.time})</div>
+                <div><strong>المسؤول:</strong> ${booking.details.name}</div>
+                <div><strong>الخدمة:</strong> ${booking.details.service}</div>
+                <div><strong>الهاتف:</strong> ${booking.details.phone}</div>
+                <div><strong>العدد:</strong> ${booking.details.count} أفراد</div>
+                <div><strong>السبب:</strong> ${booking.details.reason}</div>
+                <div><strong>الحالة:</strong> ${statusHtml}</div>
+            `;
 
             const actions = document.getElementById('detailsActions');
             if (currentUser === 'admin') {
                 if (booking.status === 'Pending') {
-                    actions.innerHTML =
-                        '<button class="btn-success" onclick="updateStatus(\'Approved\')">موافقة ✓</button>' +
-                        '<button class="btn-danger" onclick="deleteBooking()">رفض ✗</button>' +
-                        '<button class="btn-secondary" onclick="closeModals()">إغلاق</button>';
+                    actions.innerHTML = `
+                        <button class="btn btn-success" onclick="updateStatus('Approved')">موافقة ✓</button>
+                        <button class="btn btn-danger" onclick="deleteBooking()">رفض ✗</button>
+                        <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
+                    `;
                 } else {
-                    actions.innerHTML =
-                        '<button class="btn-danger" onclick="deleteBooking()">إلغاء الحجز 🗑️</button>' +
-                        '<button class="btn-secondary" onclick="closeModals()">إغلاق</button>';
+                    actions.innerHTML = `
+                        <button class="btn btn-danger" onclick="deleteBooking()">إلغاء الحجز 🗑️</button>
+                        <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
+                    `;
                 }
             } else {
-                actions.innerHTML = '<button class="btn-secondary" onclick="closeModals()">إغلاق</button>';
+                actions.innerHTML = '<button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>';
             }
 
             document.getElementById('detailsModal').style.display = 'flex';
@@ -847,7 +695,7 @@
 
         function updateStatus(newStatus) {
             let bookings = getBookings();
-            let index = bookings.findIndex(function (b) { return b.id === selectedBookingId; });
+            let index = bookings.findIndex(b => b.id === selectedBookingId);
             if (index !== -1) {
                 bookings[index].status = newStatus;
                 saveBookings(bookings);
@@ -860,7 +708,7 @@
         function deleteBooking() {
             if (confirm("هل أنت متأكد من حذف/رفض هذا الحجز؟")) {
                 let bookings = getBookings();
-                bookings = bookings.filter(function (b) { return b.id !== selectedBookingId; });
+                bookings = bookings.filter(b => b.id !== selectedBookingId);
                 saveBookings(bookings);
                 closeModals();
                 refreshUI();
@@ -868,71 +716,29 @@
             }
         }
 
-        function refreshUI() {
-            generateTimeHeaders();
-            generateMatrix();
-        }
-
-        function generateTimeHeaders() {
-            const tr = document.getElementById('timeHeaders');
-            tr.innerHTML = '<th class="room-col">المكان</th>';
-
-            const now = new Date();
-            const currentHour = now.getHours();
-            const isToday = document.getElementById('bookingDate').value === getLocalDateStr();
-
-            times.forEach(function (time) {
-                const th = document.createElement('th');
-                const timeHour = get24hTime(time);
-
-                let timeDisplay = time.split(' ')[0];
-                let ampm = time.split(' ')[1];
-
-                if (isToday && timeHour === currentHour) {
-                    th.classList.add('current-time-header');
-                    th.innerHTML = '<div>' + ampm + '</div><div class="current-time-badge">' + timeDisplay.split(':')[0] + '</div>';
-                } else {
-                    th.innerHTML = '<div>' + ampm + '</div><div style="font-size:16px; margin-top:5px; color:var(--text-color);">' + timeDisplay.split(':')[0] + '</div>';
-                }
-                tr.appendChild(th);
-            });
-        }
-
         function isElKarmaLocked(date) {
             let churchRoomsCount = 0;
-            scheduleData.forEach(function (bldg) {
-                if (bldg.building === "الكنيسة") {
-                    churchRoomsCount += bldg.rooms.length;
-                }
+            scheduleData.forEach(bldg => {
+                if (bldg.building === "الكنيسة") churchRoomsCount += bldg.rooms.length;
             });
             const totalChurchSlots = churchRoomsCount * times.length;
 
-            const bookings = getBookings().filter(function (b) { return b.date === date; });
+            const bookings = getBookings().filter(b => b.date === date);
             let bookedChurchSlots = 0;
-            bookings.forEach(function (b) {
-                let isChurch = false;
-                scheduleData.forEach(function (bldg) {
-                    if (bldg.building === "الكنيسة" && bldg.rooms.includes(b.room)) {
-                        isChurch = true;
-                    }
-                });
-                if (isChurch) {
-                    bookedChurchSlots++;
-                }
+            bookings.forEach(b => {
+                let isChurch = scheduleData.some(bldg => bldg.building === "الكنيسة" && bldg.rooms.includes(b.room));
+                if (isChurch) bookedChurchSlots++;
             });
 
             return bookedChurchSlots < totalChurchSlots;
         }
 
-        function generateMatrix() {
+        function refreshUI() {
             const date = document.getElementById('bookingDate').value;
-            const tbody = document.getElementById('matrixBody');
-            tbody.innerHTML = '';
+            const container = document.getElementById('mainContent');
+            container.innerHTML = '';
 
-            const currentBookings = getBookings().filter(function (b) { return b.date === date; });
-
-            // Filters
-            const selectedBuilding = document.querySelector('input[name="building"]:checked').value;
+            const currentBookings = getBookings().filter(b => b.date === date);
             const showApproved = document.getElementById('filterApproved').checked;
             const showPending = document.getElementById('filterPending').checked;
 
@@ -942,88 +748,104 @@
             const isPastDate = new Date(date) < new Date(getLocalDateStr());
             const elKarmaLocked = isElKarmaLocked(date);
 
-            scheduleData.forEach(function (bldg) {
+            let hasRooms = false;
+
+            scheduleData.forEach(bldg => {
                 if (selectedBuilding !== 'all' && bldg.building !== selectedBuilding) return;
 
-                bldg.rooms.forEach(function (room) {
-                    let tr = document.createElement('tr');
+                bldg.rooms.forEach(room => {
+                    hasRooms = true;
+                    let card = document.createElement('div');
+                    card.className = 'room-card';
 
-                    let tdRoom = document.createElement('td');
-                    tdRoom.className = 'room-col';
-                    tdRoom.innerText = room;
+                    let header = document.createElement('div');
+                    header.className = 'room-header';
+                    header.innerText = room;
+                    if (selectedBuilding === 'all') {
+                        let bBadge = document.createElement('span');
+                        bBadge.style.cssText = "font-size: 11px; background: var(--bg-color); color: var(--text-muted); padding: 2px 8px; border-radius: 10px; margin-right: 10px; font-weight: normal;";
+                        bBadge.innerText = bldg.building;
+                        header.appendChild(bBadge);
+                    }
+                    card.appendChild(header);
 
-                    // Add a subtle building indicator
-                    let bldgSpan = document.createElement('div');
-                    bldgSpan.style.fontSize = '10px';
-                    bldgSpan.style.color = 'var(--text-muted)';
-                    bldgSpan.style.fontWeight = 'normal';
-                    bldgSpan.innerText = bldg.building;
-                    tdRoom.appendChild(bldgSpan);
+                    let grid = document.createElement('div');
+                    grid.className = 'slots-grid';
 
-                    tr.appendChild(tdRoom);
+                    times.forEach(time => {
+                        let slot = document.createElement('div');
+                        slot.className = 'slot';
 
-                    times.forEach(function (time) {
-                        let tdTime = document.createElement('td');
-                        tdTime.className = "time-slot";
+                        let timeText = document.createElement('div');
+                        timeText.innerText = time;
+                        slot.appendChild(timeText);
 
                         const timeHour = get24hTime(time);
                         const isPastTime = isPastDate || (isToday && timeHour < currentHour);
                         const isElKarma = bldg.building === 'مبنى الكرمة';
                         const isLockedForUser = isElKarma && elKarmaLocked && currentUser !== 'admin';
 
-                        if (isPastTime) {
-                            tdTime.classList.add('past-time');
-                        }
-
-                        let slotBookings = currentBookings.filter(function (b) { return b.room === room && b.time === time; });
-                        let approvedBooking = slotBookings.find(function (b) { return b.status === 'Approved'; });
-                        let pendingBookings = slotBookings.filter(function (b) { return b.status === 'Pending'; });
+                        let slotBookings = currentBookings.filter(b => b.room === room && b.time === time);
+                        let approvedBooking = slotBookings.find(b => b.status === 'Approved');
+                        let pendingBookings = slotBookings.filter(b => b.status === 'Pending');
 
                         if (isLockedForUser && !isPastTime) {
-                            tdTime.innerHTML = '<div style="color:var(--text-muted); font-size:14px; display:flex; justify-content:center; align-items:center; height:100%;">🔒</div>';
-                            tdTime.onclick = function () { showToast("مبنى الكرمة مغلق حتى يتم حجز مبنى الكنيسة بالكامل في هذا اليوم", "warning"); };
+                            slot.classList.add('locked');
+                            let lockIcon = document.createElement('div');
+                            lockIcon.innerText = '🔒 مغلق';
+                            lockIcon.className = 'slot-name';
+                            slot.appendChild(lockIcon);
+                            slot.onclick = () => showToast("مبنى الكرمة مغلق حتى يتم حجز مبنى الكنيسة بالكامل", "warning");
                         } else if (isPastTime) {
-                            tdTime.classList.add('past-time');
-                            tdTime.onclick = function () { showToast("لا يمكن الحجز في وقت قد مضى", "warning"); };
+                            slot.classList.add('past');
+                            slot.onclick = () => showToast("لا يمكن الحجز في وقت قد مضى", "warning");
                             if (approvedBooking && showApproved) {
-                                let eventDiv = document.createElement('div');
-                                eventDiv.className = 'booking-event state-approved';
-                                eventDiv.innerText = approvedBooking.details.name;
-                                tdTime.appendChild(eventDiv);
+                                let name = document.createElement('div');
+                                name.className = 'slot-name';
+                                name.innerText = approvedBooking.details.name;
+                                slot.appendChild(name);
+                            } else {
+                                let name = document.createElement('div');
+                                name.className = 'slot-name';
+                                name.innerText = 'منتهي';
+                                slot.appendChild(name);
                             }
                         } else {
                             if (approvedBooking && showApproved) {
-                                tdTime.classList.add('has-booking');
-                                let eventDiv = document.createElement('div');
-                                eventDiv.className = 'booking-event state-approved';
-                                eventDiv.innerText = approvedBooking.details.name;
-                                tdTime.appendChild(eventDiv);
-                                tdTime.onclick = function () { openAdminDetails(approvedBooking.id); };
+                                slot.classList.add('approved');
+                                let name = document.createElement('div');
+                                name.className = 'slot-name';
+                                name.innerText = approvedBooking.details.name;
+                                slot.appendChild(name);
+                                slot.onclick = () => openAdminDetails(approvedBooking.id);
+                            } else if (pendingBookings.length > 0 && showPending) {
+                                slot.classList.add('pending');
+                                let name = document.createElement('div');
+                                name.className = 'slot-name';
+                                name.innerText = pendingBookings[0].details.name + (pendingBookings.length > 1 ? ` (+${pendingBookings.length - 1})` : '');
+                                slot.appendChild(name);
+                                slot.onclick = () => openAdminDetails(pendingBookings[0].id);
                             } else {
-                                tdTime.innerHTML = '<div class="hover-plus">+</div>';
-                                tdTime.onclick = function () { openBookingForm(room, time); };
-
-                                if (pendingBookings.length > 0 && showPending) {
-                                    tdTime.classList.add('has-booking');
-                                    pendingBookings.forEach(function (pb) {
-                                        let eventDiv = document.createElement('div');
-                                        eventDiv.className = 'booking-event state-pending';
-                                        eventDiv.innerText = pb.details.name;
-                                        eventDiv.onclick = function (e) {
-                                            e.stopPropagation();
-                                            openAdminDetails(pb.id);
-                                        };
-                                        tdTime.appendChild(eventDiv);
-                                    });
-                                }
+                                slot.classList.add('available');
+                                let name = document.createElement('div');
+                                name.className = 'slot-name';
+                                name.innerText = 'متاح للحجز';
+                                slot.appendChild(name);
+                                slot.onclick = () => openBookingForm(room, time);
                             }
                         }
 
-                        tr.appendChild(tdTime);
+                        grid.appendChild(slot);
                     });
-                    tbody.appendChild(tr);
+
+                    card.appendChild(grid);
+                    container.appendChild(card);
                 });
             });
+
+            if (!hasRooms) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">لا توجد أماكن متاحة</div>';
+            }
         }
     </script>
 </body>
