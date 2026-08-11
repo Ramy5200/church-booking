@@ -444,6 +444,67 @@
         .toast.warning {
             border-right-color: var(--warning-color);
         }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            #appScreen {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 30vh;
+                border-left: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 15px;
+                box-sizing: border-box;
+                gap: 15px;
+            }
+
+            .main-content {
+                height: 70vh;
+            }
+
+            .room-col {
+                min-width: 100px;
+                max-width: 100px;
+                font-size: 12px;
+                padding: 0 5px;
+            }
+
+            th,
+            td {
+                min-width: 60px;
+                height: 40px;
+            }
+
+            .top-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 10px 15px;
+            }
+
+            .top-header h2 {
+                font-size: 16px;
+            }
+
+            .modal-box {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .booking-event {
+                font-size: 10px;
+                padding: 2px 4px;
+            }
+
+            .current-time-badge {
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 
@@ -549,8 +610,11 @@
                 <label>السبب</label>
                 <input type="text" id="f_reason" required>
 
-                <div id="recurringSection" style="display:none; margin-top: 15px; padding: 10px; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
-                    <label style="margin-top: 0;"><input type="checkbox" id="f_recurring" onchange="document.getElementById('endDateSection').style.display = this.checked ? 'block' : 'none';"> حجز متكرر (أسبوعياً)</label>
+                <div id="recurringSection"
+                    style="display:none; margin-top: 15px; padding: 10px; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                    <label style="margin-top: 0;"><input type="checkbox" id="f_recurring"
+                            onchange="document.getElementById('endDateSection').style.display = this.checked ? 'block' : 'none';">
+                        حجز متكرر (أسبوعياً)</label>
                     <div id="endDateSection" style="display:none;">
                         <label>تاريخ الانتهاء</label>
                         <input type="date" id="f_end_date">
@@ -658,7 +722,7 @@
             document.getElementById('bookingForm').reset();
             document.getElementById('modalSubtitle').innerText = "المكان: " + room + " | الوقت: " + time + " | التاريخ: " + date;
             document.getElementById('btnSubmitForm').innerText = currentUser === 'admin' ? "تأكيد وإضافة مباشر" : "إرسال طلب الحجز";
-            
+
             document.getElementById('recurringSection').style.display = currentUser === 'admin' ? 'block' : 'none';
             document.getElementById('endDateSection').style.display = 'none';
 
@@ -675,12 +739,12 @@
             event.preventDefault();
             const startDate = document.getElementById('bookingDate').value;
             let bookings = getBookings();
-            
+
             const isRecurring = document.getElementById('f_recurring') && document.getElementById('f_recurring').checked;
             const endDateStr = document.getElementById('f_end_date') ? document.getElementById('f_end_date').value : '';
-            
+
             let datesToBook = [startDate];
-            
+
             if (currentUser === 'admin' && isRecurring && endDateStr) {
                 let currDate = new Date(startDate);
                 let endDate = new Date(endDateStr);
@@ -691,8 +755,8 @@
                     datesToBook.push(dStr);
                 }
             }
-            
-            datesToBook.forEach(function(d) {
+
+            datesToBook.forEach(function (d) {
                 let newBooking = {
                     id: Date.now() + Math.floor(Math.random() * 1000),
                     date: d,
@@ -713,8 +777,8 @@
             saveBookings(bookings);
             closeModals();
             refreshUI();
-            
-            if(currentUser !== 'admin') {
+
+            if (currentUser !== 'admin') {
                 showToast("تم ارسال طلبك بنجاح. في انتظار موافقة الإدارة.", "success");
             } else {
                 showToast("تم إضافة الحجز بنجاح.", "success");
@@ -894,8 +958,8 @@
                         }
 
                         let slotBookings = currentBookings.filter(function (b) { return b.room === room && b.time === time; });
-                        let approvedBooking = slotBookings.find(function(b) { return b.status === 'Approved'; });
-                        let pendingBookings = slotBookings.filter(function(b) { return b.status === 'Pending'; });
+                        let approvedBooking = slotBookings.find(function (b) { return b.status === 'Approved'; });
+                        let pendingBookings = slotBookings.filter(function (b) { return b.status === 'Pending'; });
 
                         if (isLockedForUser && !isPastTime) {
                             tdTime.innerHTML = '<div style="color:var(--text-muted); font-size:14px; display:flex; justify-content:center; align-items:center; height:100%;">🔒</div>';
@@ -920,14 +984,14 @@
                             } else {
                                 tdTime.innerHTML = '<div class="hover-plus">+</div>';
                                 tdTime.onclick = function () { openBookingForm(room, time); };
-                                
+
                                 if (pendingBookings.length > 0 && showPending) {
                                     tdTime.classList.add('has-booking');
-                                    pendingBookings.forEach(function(pb) {
+                                    pendingBookings.forEach(function (pb) {
                                         let eventDiv = document.createElement('div');
                                         eventDiv.className = 'booking-event state-pending';
                                         eventDiv.innerText = pb.details.name;
-                                        eventDiv.onclick = function(e) {
+                                        eventDiv.onclick = function (e) {
                                             e.stopPropagation();
                                             openAdminDetails(pb.id);
                                         };
