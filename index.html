@@ -660,6 +660,19 @@
                 const data = await response.json();
                 globalBookings = data.bookings || [];
                 globalCapacities = data.capacities || {};
+
+                // Initialize random capacities if empty
+                if (Object.keys(globalCapacities).length === 0) {
+                    scheduleData.forEach(bldg => {
+                        bldg.rooms.forEach(room => {
+                            // Random capacity between 20 and 100
+                            globalCapacities[room] = Math.floor(Math.random() * 81) + 20;
+                        });
+                    });
+                    // Save the initial random capacities to the backend
+                    await saveCapacitiesData(globalCapacities);
+                }
+
                 return true;
             } catch (error) {
                 console.error("Error fetching data:", error);
