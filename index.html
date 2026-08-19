@@ -548,8 +548,8 @@
 
         <!-- Admin Tabs -->
         <div id="adminTabs" class="admin-tabs" style="display: none;">
-            <div class="admin-tab active" onclick="switchAdminTab('places')" id="tabPlaces">إدارة الأماكن</div>
-            <div class="admin-tab" onclick="switchAdminTab('requests')" id="tabRequests">طلبات الحجز <span
+            <div class="admin-tab" onclick="switchAdminTab('places')" id="tabPlaces">إدارة الأماكن</div>
+            <div class="admin-tab active" onclick="switchAdminTab('requests')" id="tabRequests">طلبات الحجز <span
                     id="pendingBadge"
                     style="display:none; background:var(--secondary-color); color:white; border-radius:50%; padding:2px 6px; font-size:10px; margin-right:5px;">0</span>
             </div>
@@ -616,7 +616,7 @@
 
         // State
         let currentUser = null;
-        let currentAdminTab = 'places';
+        let currentAdminTab = 'requests'; // Default to requests
         let selectedRequestId = null;
         let tempSelectedRoom = null;
         let tempSelectedBuilding = null;
@@ -755,7 +755,7 @@
 
             if (currentUser === 'admin') {
                 document.getElementById('adminTabs').style.display = 'flex';
-                switchAdminTab('places');
+                switchAdminTab('requests'); // Default to requests
                 updatePendingBadge();
             } else {
                 document.getElementById('adminTabs').style.display = 'none';
@@ -1021,6 +1021,7 @@
                 `;
             } else {
                 actionsContainer.innerHTML = `
+                    <button class="btn btn-danger" onclick="deleteBooking()">حذف الطلب</button>
                     <button class="btn btn-secondary" onclick="closeModals()">إغلاق</button>
                 `;
             }
@@ -1157,6 +1158,26 @@
                         closeModals();
                         renderRequestsTab();
                         showToast("تم رفض الطلب", "info");
+                    }
+                }
+            }
+        }
+
+        async function deleteBooking() {
+            if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
+                let bookings = [...globalBookings];
+                let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
+                if (reqIndex !== -1) {
+                    bookings.splice(reqIndex, 1);
+
+                    showLoading();
+                    const success = await saveBookings(bookings);
+                    hideLoading();
+
+                    if (success) {
+                        closeModals();
+                        renderRequestsTab();
+                        showToast("تم حذف الطلب بنجاح", "info");
                     }
                 }
             }
