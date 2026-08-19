@@ -681,11 +681,11 @@
             }
         }
 
-        async function saveBookings(bookings) {
+        async function saveBookings(bookings, notify = null) {
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'saveBookings', bookings: bookings })
+                    body: JSON.stringify({ action: 'saveBookings', bookings: bookings, notify: notify })
                 });
                 const result = await response.json();
                 if (result.success) {
@@ -837,7 +837,7 @@
             };
 
             bookings.push(newRequest);
-            const success = await saveBookings(bookings);
+            const success = await saveBookings(bookings, { type: 'new_request', requestDetails: newRequest });
 
             hideLoading();
             if (success) {
@@ -1133,7 +1133,7 @@
             req.status = "Approved";
 
             showLoading();
-            const success = await saveBookings(bookings);
+            const success = await saveBookings(bookings, { type: 'status_update', requestDetails: req });
             hideLoading();
 
             if (success) {
@@ -1151,7 +1151,7 @@
                     bookings[reqIndex].status = "Rejected";
 
                     showLoading();
-                    const success = await saveBookings(bookings);
+                    const success = await saveBookings(bookings, { type: 'status_update', requestDetails: bookings[reqIndex] });
                     hideLoading();
 
                     if (success) {
@@ -1215,7 +1215,7 @@
                 bookings[reqIndex].assignedBuilding = "";
 
                 showLoading();
-                const success = await saveBookings(bookings);
+                const success = await saveBookings(bookings, { type: 'status_update', requestDetails: bookings[reqIndex] });
                 hideLoading();
 
                 if (success) {
