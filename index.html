@@ -38,6 +38,40 @@
             overflow: hidden;
         }
 
+        /* Loading Overlay */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 4px solid var(--bg-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         /* Login Screen */
         #loginScreen {
             padding: 30px;
@@ -490,6 +524,11 @@
 </head>
 
 <body>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div style="margin-top: 15px; font-weight: bold; color: var(--primary-color);">جاري التحميل...</div>
+    </div>
+
     <div id="toast-container"></div>
 
     <!-- LOGIN SCREEN -->
@@ -561,6 +600,10 @@
     </div>
 
     <script>
+        // --- CONFIGURATION ---
+        // REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxvJk94_ifg4Bz6XCQGe4MbqDFk7rlmbqrg9UX7XCyliPUfE1-qsVJP1mrPcajR118I/exec";
+
         // Data
         const scheduleData = [
             { building: "الكنيسة", rooms: ["كنيسة العذراء - الدور الارضي", "كنيسة مارجرجس - الدور العلوي", "المعمودية"] },
@@ -578,15 +621,13 @@
         let tempSelectedRoom = null;
         let tempSelectedBuilding = null;
 
-        // Init LocalStorage
-        if (!localStorage.getItem('bookingsDB')) localStorage.setItem('bookingsDB', JSON.stringify([]));
-        if (!localStorage.getItem('roomCapacities')) localStorage.setItem('roomCapacities', JSON.stringify({}));
+        // Global Data Cache
+        let globalBookings = [];
+        let globalCapacities = {};
 
         // Helpers
-        function getBookings() { return JSON.parse(localStorage.getItem('bookingsDB')); }
-        function saveBookings(data) { localStorage.setItem('bookingsDB', JSON.stringify(data)); }
-        function getCapacities() { return JSON.parse(localStorage.getItem('roomCapacities')); }
-        function saveCapacitiesData(data) { localStorage.setItem('roomCapacities', JSON.stringify(data)); }
+        function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -611,20 +652,75 @@
             tempSelectedBuilding = null;
         }
 
+        // --- API CALLS ---
+        async function fetchAllData() {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                if (!response.ok) throw new Error("Network response was not ok");
+                const data = await response.json();
+                globalBookings = data.bookings || [];
+                globalCapacities = data.capacities || {};
+                return true;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                showToast("حدث خطأ أثناء جلب البيانات. تأكد من إعداد Google Apps Script.", "error");
+                return false;
+            }
+        }
+
+        async function saveBookings(bookings) {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'saveBookings', bookings: bookings })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    globalBookings = bookings;
+                    return true;
+                }
+                throw new Error("Failed to save");
+            } catch (error) {
+                console.error("Error saving bookings:", error);
+                showToast("حدث خطأ أثناء حفظ البيانات.", "error");
+                return false;
+            }
+        }
+
+        async function saveCapacitiesData(capacities) {
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'saveCapacities', capacities: capacities })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    globalCapacities = capacities;
+                    return true;
+                }
+                throw new Error("Failed to save");
+            } catch (error) {
+                console.error("Error saving capacities:", error);
+                showToast("حدث خطأ أثناء حفظ السعات.", "error");
+                return false;
+            }
+        }
+
         // Auth
-        function login() {
+        async function login() {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
 
-            if (user === 'user' && pass === '1234') {
-                currentUser = 'user';
-                loadApp();
-                showToast('تم تسجيل الدخول', 'success');
-            }
-            else if (user === 'admin' && pass === '1004') {
-                currentUser = 'admin';
-                loadApp();
-                showToast('مرحباً بك في لوحة الإدارة', 'success');
+            if ((user === 'user' && pass === '1234') || (user === 'admin' && pass === '1004')) {
+                currentUser = user;
+                showLoading();
+                const success = await fetchAllData();
+                hideLoading();
+
+                if (success) {
+                    loadApp();
+                    showToast(user === 'admin' ? 'مرحباً بك في لوحة الإدارة' : 'تم تسجيل الدخول', 'success');
+                }
             }
             else {
                 showToast('بيانات الدخول خاطئة!', 'error');
@@ -705,9 +801,11 @@
             `;
         }
 
-        function submitUserRequest(e) {
+        async function submitUserRequest(e) {
             e.preventDefault();
-            let bookings = getBookings();
+            showLoading();
+
+            let bookings = [...globalBookings];
 
             const newRequest = {
                 id: Date.now() + Math.floor(Math.random() * 1000),
@@ -720,16 +818,19 @@
                 reason: document.getElementById('req_reason').value,
                 description: document.getElementById('req_desc').value,
                 status: "Pending",
-                assignedBuilding: null,
-                assignedRoom: null,
+                assignedBuilding: "",
+                assignedRoom: "",
                 createdAt: Date.now()
             };
 
             bookings.push(newRequest);
-            saveBookings(bookings);
+            const success = await saveBookings(bookings);
 
-            document.getElementById('userRequestForm').reset();
-            showToast("تم إرسال طلبك بنجاح. سيتم الرد عليك عبر البريد الإلكتروني.", "success");
+            hideLoading();
+            if (success) {
+                document.getElementById('userRequestForm').reset();
+                showToast("تم إرسال طلبك بنجاح. سيتم الرد عليك عبر البريد الإلكتروني.", "success");
+            }
         }
 
         // Admin View
@@ -748,8 +849,7 @@
         }
 
         function updatePendingBadge() {
-            const bookings = getBookings();
-            const pendingCount = bookings.filter(b => b.status === 'Pending').length;
+            const pendingCount = globalBookings.filter(b => b.status === 'Pending').length;
             const badge = document.getElementById('pendingBadge');
             if (pendingCount > 0) {
                 badge.innerText = pendingCount;
@@ -761,14 +861,13 @@
 
         function renderPlacesTab() {
             const content = document.getElementById('mainContent');
-            const capacities = getCapacities();
             let html = '';
 
             scheduleData.forEach(bldg => {
                 html += `<div class="building-section">
                             <div class="building-title">${bldg.building}</div>`;
                 bldg.rooms.forEach(room => {
-                    const cap = capacities[room] || '';
+                    const cap = globalCapacities[room] || '';
                     html += `<div class="room-capacity-item">
                                 <span>${room}</span>
                                 <div>
@@ -784,9 +883,9 @@
             content.innerHTML = html;
         }
 
-        function saveAllCapacities() {
+        async function saveAllCapacities() {
             const inputs = document.querySelectorAll('.cap-input');
-            let capacities = getCapacities();
+            let capacities = { ...globalCapacities };
 
             inputs.forEach(input => {
                 const room = input.getAttribute('data-room');
@@ -798,13 +897,18 @@
                 }
             });
 
-            saveCapacitiesData(capacities);
-            showToast("تم حفظ السعات بنجاح", "success");
+            showLoading();
+            const success = await saveCapacitiesData(capacities);
+            hideLoading();
+
+            if (success) {
+                showToast("تم حفظ السعات بنجاح", "success");
+            }
         }
 
         function renderRequestsTab() {
             const content = document.getElementById('mainContent');
-            let bookings = getBookings();
+            let bookings = [...globalBookings];
 
             // Sort: Pending first, then by date created (newest first)
             bookings.sort((a, b) => {
@@ -849,8 +953,7 @@
         }
 
         function isRoomAvailable(room, date, time, excludeRequestId = null) {
-            const bookings = getBookings();
-            return !bookings.some(b =>
+            return !globalBookings.some(b =>
                 b.status === 'Approved' &&
                 b.assignedRoom === room &&
                 b.requestedDate === date &&
@@ -860,7 +963,7 @@
         }
 
         function openRequestDetails(id) {
-            const req = getBookings().find(b => b.id === id);
+            const req = globalBookings.find(b => b.id === id);
             if (!req) return;
 
             selectedRequestId = id;
@@ -914,13 +1017,12 @@
 
         function renderSuitableRooms(req, showAll = false) {
             const container = document.getElementById('suitableRoomsContainer');
-            const capacities = getCapacities();
             let suitableRooms = [];
             let allRooms = [];
 
             scheduleData.forEach(bldg => {
                 bldg.rooms.forEach(room => {
-                    const cap = capacities[room] || 0;
+                    const cap = globalCapacities[room] || 0;
                     const isAvail = isRoomAvailable(room, req.requestedDate, req.requestedTime, req.id);
 
                     const roomObj = { building: bldg.building, room: room, capacity: cap, available: isAvail };
@@ -946,7 +1048,7 @@
                     <div style="color:var(--secondary-color); margin-bottom:15px; font-weight:bold;">
                         لا يوجد مكان متاح يناسب عدد الأفراد في هذا الموعد.
                     </div>
-                    <button class="btn btn-secondary" style="width:100%;" onclick="renderSuitableRooms(getBookings().find(b=>b.id===selectedRequestId), true)">اختيار مكان آخر</button>
+                    <button class="btn btn-secondary" style="width:100%;" onclick="renderSuitableRooms(globalBookings.find(b=>b.id===selectedRequestId), true)">اختيار مكان آخر</button>
                 `;
             } else {
                 roomsToDisplay.forEach(r => {
@@ -973,7 +1075,7 @@
                 });
 
                 if (!showAll) {
-                    html += `<button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="renderSuitableRooms(getBookings().find(b=>b.id===selectedRequestId), true)">اختيار مكان آخر</button>`;
+                    html += `<button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="renderSuitableRooms(globalBookings.find(b=>b.id===selectedRequestId), true)">اختيار مكان آخر</button>`;
                 }
             }
 
@@ -990,26 +1092,23 @@
             tempSelectedRoom = room;
             tempSelectedBuilding = building;
 
-            // Re-render to update selection UI
-            const req = getBookings().find(b => b.id === selectedRequestId);
-            // Check if we were showing all rooms to maintain that state
+            const req = globalBookings.find(b => b.id === selectedRequestId);
             const isShowingAll = document.querySelector('.suitable-rooms-section h4').innerText.includes('جميع الأماكن');
             renderSuitableRooms(req, isShowingAll);
         }
 
-        function confirmBooking() {
+        async function confirmBooking() {
             if (!tempSelectedRoom) {
                 showToast("برجاء اختيار مكان أولاً.", "warning");
                 return;
             }
 
-            let bookings = getBookings();
+            let bookings = [...globalBookings];
             let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
             if (reqIndex === -1) return;
 
             let req = bookings[reqIndex];
 
-            // Final availability check
             if (!isRoomAvailable(tempSelectedRoom, req.requestedDate, req.requestedTime, req.id)) {
                 showToast("عذراً، هذا المكان لم يعد متاحاً في هذا الموعد. تم حجزه لطلب آخر.", "error");
                 return;
@@ -1019,28 +1118,39 @@
             req.assignedBuilding = tempSelectedBuilding;
             req.status = "Approved";
 
-            saveBookings(bookings);
-            closeModals();
-            renderRequestsTab();
-            showToast("تم تأكيد الحجز بنجاح", "success");
+            showLoading();
+            const success = await saveBookings(bookings);
+            hideLoading();
+
+            if (success) {
+                closeModals();
+                renderRequestsTab();
+                showToast("تم تأكيد الحجز بنجاح", "success");
+            }
         }
 
-        function rejectBooking() {
+        async function rejectBooking() {
             if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
-                let bookings = getBookings();
+                let bookings = [...globalBookings];
                 let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
                 if (reqIndex !== -1) {
                     bookings[reqIndex].status = "Rejected";
-                    saveBookings(bookings);
-                    closeModals();
-                    renderRequestsTab();
-                    showToast("تم رفض الطلب", "info");
+
+                    showLoading();
+                    const success = await saveBookings(bookings);
+                    hideLoading();
+
+                    if (success) {
+                        closeModals();
+                        renderRequestsTab();
+                        showToast("تم رفض الطلب", "info");
+                    }
                 }
             }
         }
 
         function openRescheduleModal() {
-            const req = getBookings().find(b => b.id === selectedRequestId);
+            const req = globalBookings.find(b => b.id === selectedRequestId);
             if (!req) return;
 
             document.getElementById('rescheduleDate').value = req.requestedDate;
@@ -1052,7 +1162,7 @@
             document.getElementById('rescheduleModal').style.display = 'flex';
         }
 
-        function confirmReschedule() {
+        async function confirmReschedule() {
             const newDate = document.getElementById('rescheduleDate').value;
             const newTime = document.getElementById('rescheduleTime').value;
 
@@ -1061,21 +1171,25 @@
                 return;
             }
 
-            let bookings = getBookings();
+            let bookings = [...globalBookings];
             let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
             if (reqIndex !== -1) {
                 bookings[reqIndex].requestedDate = newDate;
                 bookings[reqIndex].requestedTime = newTime;
                 bookings[reqIndex].status = "Rescheduled";
-                bookings[reqIndex].assignedRoom = null;
-                bookings[reqIndex].assignedBuilding = null;
+                bookings[reqIndex].assignedRoom = "";
+                bookings[reqIndex].assignedBuilding = "";
 
-                saveBookings(bookings);
+                showLoading();
+                const success = await saveBookings(bookings);
+                hideLoading();
 
-                document.getElementById('rescheduleModal').style.display = 'none';
-                openRequestDetails(selectedRequestId); // Re-open details to show new suitable rooms
-                renderRequestsTab();
-                showToast("تم تحديث الموعد. برجاء اختيار مكان جديد.", "info");
+                if (success) {
+                    document.getElementById('rescheduleModal').style.display = 'none';
+                    openRequestDetails(selectedRequestId);
+                    renderRequestsTab();
+                    showToast("تم تحديث الموعد. برجاء اختيار مكان جديد.", "info");
+                }
             }
         }
     </script>
