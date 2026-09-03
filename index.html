@@ -1063,12 +1063,19 @@
                 return b.createdAt - a.createdAt;
             });
 
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: var(--primary-color);">قائمة الطلبات</h3>
+                    <button class="btn btn-primary" style="padding: 8px 15px; min-width: auto; font-size: 13px;" onclick="exportBookingsToCSV()">📥 تصدير البيانات</button>
+                </div>
+            `;
+
             if (bookings.length === 0) {
-                content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">لا توجد طلبات حجز</div>';
+                html += '<div style="text-align: center; padding: 40px; color: var(--text-muted);">لا توجد طلبات حجز</div>';
+                content.innerHTML = html;
                 return;
             }
 
-            let html = '';
             bookings.forEach(req => {
                 let badgeClass = '';
                 let statusText = '';
@@ -1382,6 +1389,59 @@
                     showToast("تم تحديث الموعد. برجاء اختيار مكان جديد.", "info");
                 }
             }
+        }
+
+        function exportBookingsToCSV() {
+            if (globalBookings.length === 0) {
+                showToast("لا توجد بيانات للتصدير", "warning");
+                return;
+            }
+
+            const headers = ["ID", "التاريخ", "الوقت", "الاسم", "الهاتف", "البريد الإلكتروني", "العدد", "السبب", "الوصف", "الحالة", "المبنى", "المكان", "تاريخ الإنشاء"];
+
+            const rows = globalBookings.map(b => {
+                let statusText = '';
+                const statusStr = b.status || 'Unknown';
+                switch (statusStr) {
+                    case 'Pending': statusText = 'قيد الانتظار'; break;
+                    case 'Approved': statusText = 'موافق عليه'; break;
+                    case 'Rejected': statusText = 'مرفوض'; break;
+                    case 'Rescheduled': statusText = 'تمت إعادة الجدولة'; break;
+                    default: statusText = 'غير معروف'; break;
+                }
+
+                const createdAtStr = new Date(Number(b.createdAt)).toLocaleString('ar-EG');
+
+                return [
+                    b.id,
+                    b.requestedDate,
+                    b.requestedTime,
+                    b.name,
+                    b.phone,
+                    b.email,
+                    b.count,
+                    b.reason,
+                    b.description || '',
+                    statusText,
+                    b.assignedBuilding || '',
+                    b.assignedRoom || '',
+                    createdAtStr
+                ].map(field => `"${String(field).replace(/"/g, '""')}"`);
+            });
+
+            const csvContent = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\r\n");
+
+            // Add BOM for UTF-8 to support Arabic characters in Excel
+            const bom = "\uFEFF";
+            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `حجوزات_${getLocalDateStr()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 </body>
