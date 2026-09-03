@@ -217,6 +217,7 @@
             cursor: pointer;
             color: var(--text-muted);
             border-bottom: 3px solid transparent;
+            font-size: 14px;
         }
 
         .admin-tab.active {
@@ -304,6 +305,10 @@
             border-right-color: var(--primary-color);
         }
 
+        .request-card.status-unknown {
+            border-right-color: var(--text-muted);
+        }
+
         .request-header {
             display: flex;
             justify-content: space-between;
@@ -340,6 +345,11 @@
         .badge-rescheduled {
             background: rgba(91, 95, 199, 0.2);
             color: var(--primary-color);
+        }
+
+        .badge-unknown {
+            background: rgba(119, 119, 119, 0.2);
+            color: var(--text-muted);
         }
 
         .request-details-summary {
@@ -553,6 +563,7 @@
                     id="pendingBadge"
                     style="display:none; background:var(--secondary-color); color:white; border-radius:50%; padding:2px 6px; font-size:10px; margin-right:5px;">0</span>
             </div>
+            <div class="admin-tab" onclick="switchAdminTab('newBooking')" id="tabNewBooking">حجز جديد</div>
         </div>
 
         <div class="content" id="mainContent">
@@ -586,11 +597,19 @@
                 <label>التاريخ الجديد</label>
                 <input type="date" id="rescheduleDate" required>
             </div>
-            <div class="form-group">
-                <label>الوقت الجديد</label>
-                <select id="rescheduleTime" required>
-                    <!-- Options injected by JS -->
-                </select>
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>وقت البدء</label>
+                    <select id="rescheduleTimeStart" required>
+                        <!-- Options injected by JS -->
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label>وقت الانتهاء</label>
+                    <select id="rescheduleTimeEnd" required>
+                        <!-- Options injected by JS -->
+                    </select>
+                </div>
             </div>
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="confirmReschedule()">تحديث الموعد</button>
@@ -650,6 +669,35 @@
             selectedRequestId = null;
             tempSelectedRoom = null;
             tempSelectedBuilding = null;
+        }
+
+        // --- TIME RANGE LOGIC ---
+        function parseTimeStr(timeStr) {
+            if (!timeStr) return { start: 0, end: 0 };
+            let parts = timeStr.split(' - ');
+            let startStr = parts[0];
+            let endStr = parts.length > 1 ? parts[1] : null;
+
+            function toHour(s) {
+                if (!s) return 0;
+                let [time, ampm] = s.split(' ');
+                if (!time) return 0;
+                let hour = parseInt(time.split(':')[0]);
+                if (ampm === 'م' && hour !== 12) hour += 12;
+                if (ampm === 'ص' && hour === 12) hour = 0;
+                return hour;
+            }
+
+            let startHour = toHour(startStr);
+            let endHour = endStr ? toHour(endStr) : startHour + 1;
+
+            return { start: startHour, end: endHour };
+        }
+
+        function isTimeOverlap(time1, time2) {
+            let t1 = parseTimeStr(time1);
+            let t2 = parseTimeStr(time2);
+            return t1.start < t2.end && t2.start < t1.end;
         }
 
         // --- API CALLS ---
@@ -759,30 +807,60 @@
                 updatePendingBadge();
             } else {
                 document.getElementById('adminTabs').style.display = 'none';
-                renderUserForm();
+                renderUserForm(false);
             }
         }
 
-        // User View
-        function renderUserForm() {
+        // User View & Admin New Booking Form
+        function renderUserForm(isAdmin = false) {
             const content = document.getElementById('mainContent');
             let timeOptions = times.map(t => `<option value="${t}">${t}</option>`).join('');
 
+            let roomSelectionHtml = '';
+            if (isAdmin) {
+                let buildingOptions = scheduleData.map(b => `<option value="${b.building}">${b.building}</option>`).join('');
+                roomSelectionHtml = `
+                    <div class="form-group">
+                        <label>المبنى</label>
+                        <select id="req_building" required onchange="updateRoomDropdown()">
+                            <option value="" disabled selected>اختر المبنى</option>
+                            ${buildingOptions}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المكان</label>
+                        <select id="req_room" required>
+                            <option value="" disabled selected>اختر المكان</option>
+                        </select>
+                    </div>
+                `;
+            }
+
             content.innerHTML = `
                 <div class="request-form-container">
-                    <h3>طلب حجز جديد</h3>
-                    <form id="userRequestForm" onsubmit="submitUserRequest(event)">
+                    <h3>${isAdmin ? 'إضافة حجز جديد (مباشر)' : 'طلب حجز جديد'}</h3>
+                    <form id="userRequestForm" onsubmit="submitUserRequest(event, ${isAdmin})">
                         <div class="form-group">
                             <label>التاريخ</label>
                             <input type="date" id="req_date" required min="${getLocalDateStr()}">
                         </div>
-                        <div class="form-group">
-                            <label>الوقت</label>
-                            <select id="req_time" required>
-                                <option value="" disabled selected>اختر الوقت</option>
-                                ${timeOptions}
-                            </select>
+                        <div class="form-group" style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <label>وقت البدء</label>
+                                <select id="req_time_start" required>
+                                    <option value="" disabled selected>من</option>
+                                    ${timeOptions}
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label>وقت الانتهاء</label>
+                                <select id="req_time_end" required>
+                                    <option value="" disabled selected>إلى</option>
+                                    ${timeOptions}
+                                </select>
+                            </div>
                         </div>
+                        ${roomSelectionHtml}
                         <div class="form-group">
                             <label>اسم المسؤول عن الحجز</label>
                             <input type="text" id="req_name" required>
@@ -808,41 +886,92 @@
                             <label>الوصف (اختياري)</label>
                             <textarea id="req_desc" rows="3"></textarea>
                         </div>
-                        <button type="submit" class="btn-submit">إرسال الطلب</button>
+                        <button type="submit" class="btn-submit">${isAdmin ? 'تأكيد الحجز' : 'إرسال الطلب'}</button>
                     </form>
                 </div>
             `;
         }
 
-        async function submitUserRequest(e) {
+        window.updateRoomDropdown = function () {
+            const building = document.getElementById('req_building').value;
+            const roomSelect = document.getElementById('req_room');
+            const bldgData = scheduleData.find(b => b.building === building);
+
+            if (bldgData) {
+                roomSelect.innerHTML = '<option value="" disabled selected>اختر المكان</option>' +
+                    bldgData.rooms.map(r => `<option value="${r}">${r}</option>`).join('');
+            } else {
+                roomSelect.innerHTML = '<option value="" disabled selected>اختر المكان</option>';
+            }
+        };
+
+        async function submitUserRequest(e, isAdmin = false) {
             e.preventDefault();
+
+            const date = document.getElementById('req_date').value;
+            const timeStart = document.getElementById('req_time_start').value;
+            const timeEnd = document.getElementById('req_time_end').value;
+
+            // Validate time range
+            let t1 = parseTimeStr(timeStart);
+            let t2 = parseTimeStr(timeEnd);
+            if (t2.start <= t1.start) {
+                showToast("وقت الانتهاء يجب أن يكون بعد وقت البدء.", "warning");
+                return;
+            }
+
+            const time = timeStart + " - " + timeEnd;
+
+            let assignedBuilding = "";
+            let assignedRoom = "";
+
+            if (isAdmin) {
+                assignedBuilding = document.getElementById('req_building').value;
+                assignedRoom = document.getElementById('req_room').value;
+
+                if (!isRoomAvailable(assignedRoom, date, time)) {
+                    showToast("عذراً، هذا المكان محجوز بالفعل في هذا الموعد.", "error");
+                    return;
+                }
+            }
+
             showLoading();
 
             let bookings = [...globalBookings];
 
             const newRequest = {
                 id: Date.now() + Math.floor(Math.random() * 1000),
-                requestedDate: document.getElementById('req_date').value,
-                requestedTime: document.getElementById('req_time').value,
+                requestedDate: date,
+                requestedTime: time,
                 name: document.getElementById('req_name').value,
                 phone: document.getElementById('req_phone').value,
                 email: document.getElementById('req_email').value,
                 count: parseInt(document.getElementById('req_count').value),
                 reason: document.getElementById('req_reason').value,
                 description: document.getElementById('req_desc').value,
-                status: "Pending",
-                assignedBuilding: "",
-                assignedRoom: "",
+                status: isAdmin ? "Approved" : "Pending",
+                assignedBuilding: assignedBuilding,
+                assignedRoom: assignedRoom,
                 createdAt: Date.now()
             };
 
             bookings.push(newRequest);
-            const success = await saveBookings(bookings, { type: 'new_request', requestDetails: newRequest });
+
+            const notifyPayload = isAdmin ?
+                { type: 'status_update', requestDetails: newRequest } :
+                { type: 'new_request', requestDetails: newRequest };
+
+            const success = await saveBookings(bookings, notifyPayload);
 
             hideLoading();
             if (success) {
                 document.getElementById('userRequestForm').reset();
-                showToast("تم إرسال طلبك بنجاح. سيتم الرد عليك عبر البريد الإلكتروني.", "success");
+                if (isAdmin) {
+                    showToast("تم إضافة الحجز وتأكيده بنجاح.", "success");
+                    switchAdminTab('requests');
+                } else {
+                    showToast("تم إرسال طلبك بنجاح. سيتم الرد عليك عبر البريد الإلكتروني.", "success");
+                }
             }
         }
 
@@ -851,13 +980,17 @@
             currentAdminTab = tab;
             document.getElementById('tabPlaces').classList.remove('active');
             document.getElementById('tabRequests').classList.remove('active');
+            document.getElementById('tabNewBooking').classList.remove('active');
 
             if (tab === 'places') {
                 document.getElementById('tabPlaces').classList.add('active');
                 renderPlacesTab();
-            } else {
+            } else if (tab === 'requests') {
                 document.getElementById('tabRequests').classList.add('active');
                 renderRequestsTab();
+            } else if (tab === 'newBooking') {
+                document.getElementById('tabNewBooking').classList.add('active');
+                renderUserForm(true);
             }
         }
 
@@ -939,15 +1072,20 @@
             bookings.forEach(req => {
                 let badgeClass = '';
                 let statusText = '';
-                switch (req.status) {
+                const statusStr = req.status || 'Unknown';
+
+                switch (statusStr) {
                     case 'Pending': badgeClass = 'badge-pending'; statusText = 'قيد الانتظار'; break;
                     case 'Approved': badgeClass = 'badge-approved'; statusText = 'موافق عليه'; break;
                     case 'Rejected': badgeClass = 'badge-rejected'; statusText = 'مرفوض'; break;
                     case 'Rescheduled': badgeClass = 'badge-rescheduled'; statusText = 'تمت إعادة الجدولة'; break;
+                    default: badgeClass = 'badge-unknown'; statusText = 'غير معروف'; break;
                 }
 
+                const statusClass = statusStr.toLowerCase();
+
                 html += `
-                    <div class="request-card status-${req.status.toLowerCase()}" onclick="openRequestDetails(${req.id})">
+                    <div class="request-card status-${statusClass}" onclick="openRequestDetails('${req.id}')">
                         <div class="request-header">
                             <div class="request-title">${req.name}</div>
                             <div class="request-badge ${badgeClass}">${statusText}</div>
@@ -970,13 +1108,13 @@
                 b.status === 'Approved' &&
                 b.assignedRoom === room &&
                 b.requestedDate === date &&
-                b.requestedTime === time &&
-                b.id !== excludeRequestId
+                isTimeOverlap(b.requestedTime, time) &&
+                String(b.id) !== String(excludeRequestId)
             );
         }
 
         function openRequestDetails(id) {
-            const req = globalBookings.find(b => b.id === id);
+            const req = globalBookings.find(b => String(b.id) === String(id));
             if (!req) return;
 
             selectedRequestId = id;
@@ -985,11 +1123,13 @@
 
             const content = document.getElementById('requestDetailsContent');
             let statusHtml = '';
-            switch (req.status) {
+            const statusStr = req.status || 'Unknown';
+            switch (statusStr) {
                 case 'Pending': statusHtml = '<span style="color:var(--warning-color);font-weight:bold;">قيد الانتظار</span>'; break;
                 case 'Approved': statusHtml = '<span style="color:var(--success-color);font-weight:bold;">موافق عليه</span>'; break;
                 case 'Rejected': statusHtml = '<span style="color:var(--secondary-color);font-weight:bold;">مرفوض</span>'; break;
                 case 'Rescheduled': statusHtml = '<span style="color:var(--primary-color);font-weight:bold;">تمت إعادة الجدولة</span>'; break;
+                default: statusHtml = '<span style="color:var(--text-muted);font-weight:bold;">غير معروف</span>'; break;
             }
 
             content.innerHTML = `
@@ -1011,7 +1151,7 @@
             roomsContainer.innerHTML = '';
             actionsContainer.innerHTML = '';
 
-            if (req.status === 'Pending' || req.status === 'Rescheduled') {
+            if (statusStr === 'Pending' || statusStr === 'Rescheduled') {
                 renderSuitableRooms(req);
 
                 actionsContainer.innerHTML = `
@@ -1062,7 +1202,7 @@
                     <div style="color:var(--secondary-color); margin-bottom:15px; font-weight:bold;">
                         لا يوجد مكان متاح يناسب عدد الأفراد في هذا الموعد.
                     </div>
-                    <button class="btn btn-secondary" style="width:100%;" onclick="renderSuitableRooms(globalBookings.find(b=>b.id===selectedRequestId), true)">اختيار مكان آخر</button>
+                    <button class="btn btn-secondary" style="width:100%;" onclick="renderSuitableRooms(globalBookings.find(b=>String(b.id)===String(selectedRequestId)), true)">اختيار مكان آخر</button>
                 `;
             } else {
                 roomsToDisplay.forEach(r => {
@@ -1089,7 +1229,7 @@
                 });
 
                 if (!showAll) {
-                    html += `<button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="renderSuitableRooms(globalBookings.find(b=>b.id===selectedRequestId), true)">اختيار مكان آخر</button>`;
+                    html += `<button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="renderSuitableRooms(globalBookings.find(b=>String(b.id)===String(selectedRequestId)), true)">اختيار مكان آخر</button>`;
                 }
             }
 
@@ -1106,7 +1246,7 @@
             tempSelectedRoom = room;
             tempSelectedBuilding = building;
 
-            const req = globalBookings.find(b => b.id === selectedRequestId);
+            const req = globalBookings.find(b => String(b.id) === String(selectedRequestId));
             const isShowingAll = document.querySelector('.suitable-rooms-section h4').innerText.includes('جميع الأماكن');
             renderSuitableRooms(req, isShowingAll);
         }
@@ -1118,7 +1258,7 @@
             }
 
             let bookings = [...globalBookings];
-            let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
+            let reqIndex = bookings.findIndex(b => String(b.id) === String(selectedRequestId));
             if (reqIndex === -1) return;
 
             let req = bookings[reqIndex];
@@ -1146,7 +1286,7 @@
         async function rejectBooking() {
             if (confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
                 let bookings = [...globalBookings];
-                let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
+                let reqIndex = bookings.findIndex(b => String(b.id) === String(selectedRequestId));
                 if (reqIndex !== -1) {
                     bookings[reqIndex].status = "Rejected";
 
@@ -1166,7 +1306,7 @@
         async function deleteBooking() {
             if (confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
                 let bookings = [...globalBookings];
-                let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
+                let reqIndex = bookings.findIndex(b => String(b.id) === String(selectedRequestId));
                 if (reqIndex !== -1) {
                     bookings.splice(reqIndex, 1);
 
@@ -1184,13 +1324,20 @@
         }
 
         function openRescheduleModal() {
-            const req = globalBookings.find(b => b.id === selectedRequestId);
+            const req = globalBookings.find(b => String(b.id) === String(selectedRequestId));
             if (!req) return;
 
             document.getElementById('rescheduleDate').value = req.requestedDate;
 
-            const timeSelect = document.getElementById('rescheduleTime');
-            timeSelect.innerHTML = times.map(t => `<option value="${t}" ${t === req.requestedTime ? 'selected' : ''}>${t}</option>`).join('');
+            let parts = req.requestedTime ? req.requestedTime.split(' - ') : [];
+            let start = parts[0] || '';
+            let end = parts.length > 1 ? parts[1] : '';
+
+            const timeStartSelect = document.getElementById('rescheduleTimeStart');
+            const timeEndSelect = document.getElementById('rescheduleTimeEnd');
+
+            timeStartSelect.innerHTML = times.map(t => `<option value="${t}" ${t === start ? 'selected' : ''}>${t}</option>`).join('');
+            timeEndSelect.innerHTML = times.map(t => `<option value="${t}" ${t === end ? 'selected' : ''}>${t}</option>`).join('');
 
             document.getElementById('requestDetailsModal').style.display = 'none';
             document.getElementById('rescheduleModal').style.display = 'flex';
@@ -1198,15 +1345,25 @@
 
         async function confirmReschedule() {
             const newDate = document.getElementById('rescheduleDate').value;
-            const newTime = document.getElementById('rescheduleTime').value;
+            const timeStart = document.getElementById('rescheduleTimeStart').value;
+            const timeEnd = document.getElementById('rescheduleTimeEnd').value;
 
-            if (!newDate || !newTime) {
+            if (!newDate || !timeStart || !timeEnd) {
                 showToast("برجاء إدخال التاريخ والوقت", "warning");
                 return;
             }
 
+            let t1 = parseTimeStr(timeStart);
+            let t2 = parseTimeStr(timeEnd);
+            if (t2.start <= t1.start) {
+                showToast("وقت الانتهاء يجب أن يكون بعد وقت البدء.", "warning");
+                return;
+            }
+
+            const newTime = timeStart + " - " + timeEnd;
+
             let bookings = [...globalBookings];
-            let reqIndex = bookings.findIndex(b => b.id === selectedRequestId);
+            let reqIndex = bookings.findIndex(b => String(b.id) === String(selectedRequestId));
             if (reqIndex !== -1) {
                 bookings[reqIndex].requestedDate = newDate;
                 bookings[reqIndex].requestedTime = newTime;
